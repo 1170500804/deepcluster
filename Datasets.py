@@ -30,6 +30,7 @@ class cluster_year_built_dataset(Dataset):
             self.classes.append(year)
         self.classes = sorted(self.classes)
         self.imgs = self.df[['filename', attribute_name]]
+        self.imgs['filename'] = img_path+self.imgs['filename']
         self.imgs = self.imgs.values.tolist()
 
     def __len__(self):
