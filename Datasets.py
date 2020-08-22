@@ -29,6 +29,8 @@ class cluster_year_built_dataset(Dataset):
         for year in self.df[self.attribute_name].unique():
             self.classes.append(year)
         self.classes = sorted(self.classes)
+        self.imgs = self.df[['filename', attribute_name]]
+        self.imgs = self.imgs.values.tolist()
 
     def __len__(self):
         return len(self.df)
@@ -77,6 +79,7 @@ class cluster_year_built_dataset(Dataset):
             image = self.transform(image)
 
         return (image, label, []) # [] for compatibility
+
 
 class Rolling_Window_Year_Built_Dataset(Dataset):
     '''
