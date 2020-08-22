@@ -5,7 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 #
 # python3.7 main.py --image-folder /home/saschaho/Simcenter/Floor_Elevation_Data/Streetview_Irma/Streetview_Irma/images/
-# --batch-size 128 --train-data all_cleaned.csv --mask-buildings --exp-name year_built_cluster --nmb_cluster 10 --verbose
+# --batch 128 --train-data all_cleaned.csv --mask-buildings --exp year_built_cluster --nmb_cluster 10 --verbose
 
 import argparse
 import os
@@ -66,6 +66,8 @@ def parse_args():
     parser.add_argument('--seed', type=int, default=31, help='random seed (default: 31)')
     parser.add_argument('--exp', type=str, default='', help='path to exp folder')
     parser.add_argument('--attribute-name', type=str, default='year_built', help='the attribute name of the csv file')
+    parser.add_argument('--image-folder', type=str,
+                        help='Folder containing all images')
     parser.add_argument('--train-data', type=str,
                         help='Training csv file with image names and labels')
     parser.add_argument('--val-data', type=str,
