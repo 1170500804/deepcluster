@@ -158,7 +158,7 @@ def run_kmeans(x, nmb_clusters, verbose=False):
     n_data, d = x.shape
 
     # faiss implementation of k-means
-    clus = faiss.Kmeans(d, nmb_clusters)
+    clus = faiss.Kmeans(d, nmb_clusters, gpu=True)
 
     # Change faiss seed at each k-means so that the randomly picked
     # initialization centroids do not correspond to the same feature ids
@@ -175,7 +175,7 @@ def run_kmeans(x, nmb_clusters, verbose=False):
 
     # perform the training
     # clus.train(x, index)
-    clus.train(x, gpu=True)
+    clus.train(x)
     _, I = index.search(x, 1)
     losses = faiss.vector_to_array(clus.obj)
     if verbose:
