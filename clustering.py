@@ -158,7 +158,7 @@ def run_kmeans(x, nmb_clusters, verbose=False):
     n_data, d = x.shape
 
     # faiss implementation of k-means
-    clus = faiss.Clustering(d, nmb_clusters)
+    clus = faiss.Kmeans(d, nmb_clusters)
 
     # Change faiss seed at each k-means so that the randomly picked
     # initialization centroids do not correspond to the same feature ids
