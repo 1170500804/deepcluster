@@ -322,7 +322,7 @@ def compute_features(dataloader, model, N):
     end = time.time()
     model.eval()
     # discard the label information in the dataloader
-    for i, (input_tensor, _) in enumerate(dataloader):
+    for i, (input_tensor, _, _) in enumerate(dataloader):
         # deprecated
         input_var = torch.autograd.Variable(input_tensor.cuda(), volatile=True)
         aux = model(input_var).data.cpu().numpy()
