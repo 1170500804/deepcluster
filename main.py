@@ -4,11 +4,15 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 #
+# python3.7 main.py --image-folder /home/saschaho/Simcenter/Floor_Elevation_Data/Streetview_Irma/Streetview_Irma/images/
+# --batch-size 128 --train-data all_bims_train_cleaned.csv --val-data all_bims_val_cleaned.csv
+# --mask-buildings --exp-name year_built_cluster --nmb_cluster 10
+
 import argparse
 import os
 import pickle
 import time
-
+import datetime
 import faiss
 import numpy as np
 from sklearn.metrics.cluster import normalized_mutual_info_score
@@ -120,8 +124,9 @@ def main(args):
 
     # creating checkpoint repo
     # TODO: logdir - completed
-    exp_check = os.path.join(args.exp, 'checkpoints')
-    log_dir = os.path.join(exp_check, 'runs')
+    exp_check = os.path.join(args.exp, 'checkpoints_'+str(args.nmb_cluster))
+    currentTime = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    log_dir = os.path.join('cluster_runs', 'run_{}_{}'.format(args.nmb_cluster, currentTime))
     summary_writer = SummaryWriter(log_dir)
     if not os.path.isdir(exp_check):
         os.makedirs(exp_check)
@@ -139,7 +144,7 @@ def main(args):
 
     # load the data
     end = time.time()
-    # Load dataset TODO: write a dataset to substitute it
+    # Load dataset TODO: write a dataset to substitute it - completed
     dataset = cluster_year_built_dataset(args.attribute_name, args.val_data, args.image_folder,
                                                         transform=tra, regression=args.regression,
                                                         mask_buildings=args.mask_buildings, steps=50)
@@ -266,9 +271,8 @@ def train(loader, model, crit, opt, epoch):
         n = len(loader) * epoch + i
         if n % args.checkpoints == 0:
             path = os.path.join(
-                args.exp,
-                'checkpoints',
-                'checkpoint_classify_opt_' + str(n / args.checkpoints) + '.pth.tar',
+                os.path.join(args.exp, 'checkpoints_'+str(args.nmb_cluster)),
+                'checkpoint_classification_opt_' + str(n / args.checkpoints) + '.pth.tar',
             )
             if args.verbose:
                 print('Save checkpoint at: {0}'.format(path))
