@@ -20,7 +20,9 @@ import torch.optim
 import torch.utils.data
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
-
+from Datasets import cluster_year_built_dataset
+# TODO: add summary writer - completed
+from torch.utils.tensorboard import SummaryWriter
 import clustering
 import models
 from util import AverageMeter, Logger, UnifLabelSampler
@@ -60,7 +62,15 @@ def parse_args():
                         help='how many iterations between two checkpoints (default: 25000)')
     parser.add_argument('--seed', type=int, default=31, help='random seed (default: 31)')
     parser.add_argument('--exp', type=str, default='', help='path to exp folder')
+    parser.add_argument('--attribute-name', type=str, default='year_built', help='the attribute name of the csv file')
+    parser.add_argument('--train-data', type=str,
+                        help='Training csv file with image names and labels')
+    parser.add_argument('--val-data', type=str,
+                        help='Validation  csv file with image names and labels')
+    parser.add_argument('--test-data', type=str,
+                        help='Test csv file with image names and labels')
     parser.add_argument('--verbose', action='store_true', help='chatty')
+    parser.add_argument('--mask-buildings', action='store_true')
     return parser.parse_args()
 
 
@@ -74,7 +84,7 @@ def main(args):
     if args.verbose:
         print('Architecture: {}'.format(args.arch))
     model = models.__dict__[args.arch](sobel=args.sobel)
-    fd = int(model.top_layer.weight.size()[1])
+    fd = int(model.top_layer.weight.size()[1]) # output dimension
     model.top_layer = None
     model.features = torch.nn.DataParallel(model.features)
     model.cuda()
@@ -109,7 +119,10 @@ def main(args):
             print("=> no checkpoint found at '{}'".format(args.resume))
 
     # creating checkpoint repo
+    # TODO: logdir - completed
     exp_check = os.path.join(args.exp, 'checkpoints')
+    log_dir = os.path.join(exp_check, 'runs')
+    summary_writer = SummaryWriter(log_dir)
     if not os.path.isdir(exp_check):
         os.makedirs(exp_check)
 
@@ -126,7 +139,11 @@ def main(args):
 
     # load the data
     end = time.time()
-    dataset = datasets.ImageFolder(args.data, transform=transforms.Compose(tra))
+    # Load dataset TODO: write a dataset to substitute it
+    dataset = cluster_year_built_dataset(args.attribute_name, args.val_data, args.image_folder,
+                                                        transform=tra, regression=args.regression,
+                                                        mask_buildings=args.mask_buildings, steps=50)
+    # dataset = datasets.ImageFolder(args.data, transform=transforms.Compose(tra))
     if args.verbose:
         print('Load dataset: {0:.2f} s'.format(time.time() - end))
 
@@ -153,6 +170,8 @@ def main(args):
         if args.verbose:
             print('Cluster the features')
         clustering_loss = deepcluster.cluster(features, verbose=args.verbose)
+        # TODO: push to tensorboard - completed
+        summary_writer.add_scalar('clustering_loss', clustering_loss, epoch)
 
         # assign pseudo-labels
         if args.verbose:
@@ -184,7 +203,8 @@ def main(args):
         # train network with clusters as pseudo-labels
         end = time.time()
         loss = train(train_dataloader, model, criterion, optimizer, epoch)
-
+        # TODO: push to tensorboard - completed
+        summary_writer.add_scalar('classification loss', loss, epoch)
         # print log
         if args.verbose:
             print('###### Epoch [{0}] ###### \n'
@@ -206,7 +226,7 @@ def main(args):
                     'arch': args.arch,
                     'state_dict': model.state_dict(),
                     'optimizer' : optimizer.state_dict()},
-                   os.path.join(args.exp, 'checkpoint.pth.tar'))
+                   os.path.join(exp_check, 'checkpoint_whole_{}.pth.tar'.format(epoch)))
 
         # save cluster assignments
         cluster_log.log(deepcluster.images_lists)
@@ -248,7 +268,7 @@ def train(loader, model, crit, opt, epoch):
             path = os.path.join(
                 args.exp,
                 'checkpoints',
-                'checkpoint_' + str(n / args.checkpoints) + '.pth.tar',
+                'checkpoint_classify_opt_' + str(n / args.checkpoints) + '.pth.tar',
             )
             if args.verbose:
                 print('Save checkpoint at: {0}'.format(path))
@@ -264,6 +284,7 @@ def train(loader, model, crit, opt, epoch):
         target_var = torch.autograd.Variable(target)
 
         output = model(input_var)
+        # loss of classifying the pseudo-labes
         loss = crit(output, target_var)
 
         # record loss
@@ -298,6 +319,7 @@ def compute_features(dataloader, model, N):
     model.eval()
     # discard the label information in the dataloader
     for i, (input_tensor, _) in enumerate(dataloader):
+        # deprecated
         input_var = torch.autograd.Variable(input_tensor.cuda(), volatile=True)
         aux = model(input_var).data.cpu().numpy()
 
