@@ -146,7 +146,7 @@ def main(args):
     end = time.time()
     # Load dataset TODO: write a dataset to substitute it - completed
     dataset = cluster_year_built_dataset(args.attribute_name, args.train_data, args.image_folder,
-                                                        transform=tra, regression=False,
+                                                        transform=transforms.Compose(tra), regression=False,
                                                         mask_buildings=args.mask_buildings, steps=50)
     # dataset = datasets.ImageFolder(args.data, transform=transforms.Compose(tra))
     if args.verbose:
