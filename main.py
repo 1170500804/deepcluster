@@ -34,7 +34,6 @@ from util import AverageMeter, Logger, UnifLabelSampler
 def parse_args():
     parser = argparse.ArgumentParser(description='PyTorch Implementation of DeepCluster')
 
-    parser.add_argument('data', metavar='DIR', help='path to dataset')
     parser.add_argument('--arch', '-a', type=str, metavar='ARCH',
                         choices=['alexnet', 'vgg16'], default='alexnet',
                         help='CNN architecture (default: alexnet)')
