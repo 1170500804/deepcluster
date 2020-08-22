@@ -174,7 +174,8 @@ def run_kmeans(x, nmb_clusters, verbose=False):
     index = faiss.GpuIndexFlatL2(res, d, flat_config)
 
     # perform the training
-    clus.train(x, index)
+    # clus.train(x, index)
+    clus.train(x, gpu=True)
     _, I = index.search(x, 1)
     losses = faiss.vector_to_array(clus.obj)
     if verbose:
