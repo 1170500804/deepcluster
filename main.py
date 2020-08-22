@@ -5,8 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 #
 # python3.7 main.py --image-folder /home/saschaho/Simcenter/Floor_Elevation_Data/Streetview_Irma/Streetview_Irma/images/
-# --batch-size 128 --train-data all_bims_train_cleaned.csv --val-data all_bims_val_cleaned.csv
-# --mask-buildings --exp-name year_built_cluster --nmb_cluster 10
+# --batch-size 128 --train-data all_cleaned.csv --mask-buildings --exp-name year_built_cluster --nmb_cluster 10 --verbose
 
 import argparse
 import os
@@ -145,7 +144,7 @@ def main(args):
     # load the data
     end = time.time()
     # Load dataset TODO: write a dataset to substitute it - completed
-    dataset = cluster_year_built_dataset(args.attribute_name, args.val_data, args.image_folder,
+    dataset = cluster_year_built_dataset(args.attribute_name, args.train_data, args.image_folder,
                                                         transform=tra, regression=args.regression,
                                                         mask_buildings=args.mask_buildings, steps=50)
     # dataset = datasets.ImageFolder(args.data, transform=transforms.Compose(tra))
@@ -283,7 +282,7 @@ def train(loader, model, crit, opt, epoch):
                 'optimizer' : opt.state_dict()
             }, path)
 
-        target = target.cuda(async=True)
+        target = target.cuda()
         input_var = torch.autograd.Variable(input_tensor.cuda())
         target_var = torch.autograd.Variable(target)
 
